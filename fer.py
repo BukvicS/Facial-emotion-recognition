@@ -4,18 +4,29 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.layers import BatchNormalization, Dense, Dropout, Flatten
 from tensorflow.keras.layers import Conv2D, MaxPooling2D
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
 train_dir = 'input/train'
 test_dir  = 'input/test'
 
-datagen = ImageDataGenerator(
-    rescale=1./255,             # normalizacija piksela na opseg [0,1]
-    validation_split=0.2        # 20% podataka (slika) ide na validaciju
+train_datagen = ImageDataGenerator(
+    rescale=1./255,
+    validation_split=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    rotation_range=20,
+    fill_mode='nearest'
+)   
+
+validation_datagen = ImageDataGenerator(
+    rescale=1./255,
+    validation_split=0.2
 )
 
 # 80% podataka za trening
-train_generator = datagen.flow_from_directory(
+train_generator = train_datagen.flow_from_directory(
     directory=train_dir,
     target_size=(48, 48),       #Dimenzije slika
     batch_size=128,             #Broj SLIKA obradenih odjednom
@@ -26,7 +37,7 @@ train_generator = datagen.flow_from_directory(
 )
 
 # 20% podataka za validaciju
-validation_generator = datagen.flow_from_directory(
+validation_generator = validation_datagen.flow_from_directory(
     directory=train_dir,
     target_size=(48, 48),
     batch_size=128,
@@ -63,15 +74,33 @@ model.compile(
     metrics=['accuracy']
 )
 
-# Callback za čuvanje najboljih težina
-checkpoint_callback = ModelCheckpoint(
-    filepath='best_model.weights.h5',
-    monitor='val_accuracy',
-    save_best_only=True,
-    save_weights_only=True,
-    mode='max',
-    verbose=1
-)
+# Callback-ovi za cuvanje najboljeg modela 
+callbacks = [
+    ModelCheckpoint(
+        filepath='best_model.weights.h5',
+        monitor='val_accuracy',
+        save_best_only=True,
+        save_weights_only=True,
+        mode='max',
+        verbose=1               #Detaljnost prikaza
+    ),
+
+    EarlyStopping(
+        monitor='val_loss',     #Moze i val_accuracy, ali nije precizno jer moze da stagnira dok se val_loss smanjuje
+        patience=10,
+        verbose=1,              
+        restore_best_weights=True
+    ),
+
+    ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.3,         #Kad nema poboljsanja, smanjuje se LR mnozenjem sa faktorom
+        patience=5,
+        verbose=1,
+        min_lr=1e-6         #Proba, eksperimentalno 
+    )
+    
+    ]
 
 # Treniranje modela
 history = model.fit(
@@ -79,11 +108,13 @@ history = model.fit(
     steps_per_epoch=len(train_generator),
     validation_data=validation_generator,
     validation_steps=len(validation_generator),
-    callbacks=[checkpoint_callback],
+    callbacks=[callbacks],
     epochs=50
 )
 
-test_datagen = ImageDataGenerator(rescale=1./255)
+test_datagen = ImageDataGenerator(
+    rescale=1./255
+)
 
 test_generator = test_datagen.flow_from_directory(
     directory=test_dir,
