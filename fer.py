@@ -14,15 +14,15 @@ train_datagen = ImageDataGenerator(
     validation_split=0.2,
     zoom_range=0.2,
     horizontal_flip=True,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
+    width_shift_range=0.1,          #Pokusali smo sa 0.2 i dobijemo ispod 60% accuracy
+    height_shift_range=0.1,
     rotation_range=20,
-    fill_mode='nearest'
+    fill_mode='nearest',
 )   
 
 validation_datagen = ImageDataGenerator(
     rescale=1./255,
-    validation_split=0.2
+    validation_split=0.2,
 )
 
 # 80% podataka za trening
@@ -52,18 +52,26 @@ model = Sequential([
     keras.Input(shape=(48, 48, 1)),
     
     Conv2D(32, kernel_size=(3, 3), activation='relu'),  #32 karakteristicne tacke po kojima trazi slicnosti i razlicitosti u kategorijama
-    MaxPooling2D(pool_size=(2, 2)),                     #Smanjivanje rezolucije, ostavljanje samo najjacih piksela u kvadratima 2x2
+    BatchNormalization(),                               #Normalizacija podataka
+    Dropout(0.25),                                      #Random iskljucivanje 25% neurona, jure se prave karakteristike, protiv overfittinga
     
     Conv2D(64, kernel_size=(3, 3), activation='relu'),  #Svaki sledeci sloj istrazuje oko karakteristicnih tacki iz prethodnog sloja, i trazi jos detaljnije slicnosti i razlicitosti
+    BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
+    Dropout(0.25),
     
     Conv2D(128, kernel_size=(3, 3), activation='relu'),
+    BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
-    
+    Dropout(0.25),
+
     Flatten(),      #2D -> 1D matricu
     
     # Potpuno povezani slojevi
     Dense(128, activation='relu'),  # Izvlacenje zakonitosti po kojima slicne linije i oblici pripadaju istoj kategoriji
+    BatchNormalization(),
+    Dropout(0.5),
+
     Dense(7, activation='softmax')  # 7 klasa (emocije)
 ])
 
@@ -102,13 +110,14 @@ callbacks = [
     
     ]
 
-# Treniranje modela
+model.summary()
+
 history = model.fit(
     train_generator,
     steps_per_epoch=len(train_generator),
     validation_data=validation_generator,
     validation_steps=len(validation_generator),
-    callbacks=[callbacks],
+    callbacks=callbacks,
     epochs=50
 )
 
@@ -131,3 +140,4 @@ test_loss, test_accuracy = model.evaluate(test_generator)
 
 print(f'Gubici  na test skupu: {test_loss:.4f}')
 print(f'Tacnost na test skupu: {test_accuracy:.4f}')
+
