@@ -139,11 +139,11 @@ def set_callbacks( path = 'best_model.weights.h5' ):
             save_best_only      = True          ,
             save_weights_only   = True          ,       #Cuvamo samo tezine, ne ceo model
             mode                = 'max'         ,
-            verbose             = 1     #Detaljnost prikaza
+            verbose             = 1                     #Detaljnost prikaza
         ),
 
         EarlyStopping(
-            monitor  = 'val_loss',     #Moze i val_accuracy, ali nije precizno jer moze da stagnira dok se val_loss smanjuje
+            monitor  = 'val_loss',              #Moze i val_accuracy, ali nije precizno jer moze da stagnira dok se val_loss smanjuje
             patience = 10        ,
             verbose  = 1         ,              
             restore_best_weights = True
@@ -237,7 +237,6 @@ def plot_training_history( history ):
                 )
     
     ax1.xaxis.set_major_locator( plt.MaxNLocator( nbins = 10, integer = True ) )
-    # ax1.set_xticks( epochs_range )  
     ax1.set_xlim( [ 0.5, epochs_count + 0.5 ] )
     
     ax1.set_title( 'Tačnost modela kroz epohe', fontsize = 14, fontweight = 'bold' )
@@ -269,7 +268,6 @@ def plot_training_history( history ):
     best_val_loss = min( history.history[ 'val_loss' ] )
     best_loss_epoch = history.history[ 'val_loss' ].index( best_val_loss ) + 1
     
-    # ax2.set_xticks( epochs_range )  
     ax2.xaxis.set_major_locator( plt.MaxNLocator( nbins = 10, integer = True ) )
     ax2.set_xlim( [ 0.5, epochs_count + 0.5 ] )
     
@@ -304,9 +302,6 @@ def plot_training_history( history ):
                  bbox_inches = 'tight'
                 )
     
-    plt.show()
-    plt.close( figure )
-
 # ---------------------------- #
 
 def plot_confusion_matrix( model                                                                                ,
@@ -327,7 +322,7 @@ def plot_confusion_matrix( model                                                
 
     cm = confusion_matrix( true_classes, predicted_classes )
 
-    fig = plt.figure( figsize = ( 10, 8 ) )
+    plt.figure( figsize = ( 10, 8 ) )
     
     sns.heatmap( cm,
                 annot = True,
@@ -342,8 +337,6 @@ def plot_confusion_matrix( model                                                
     plt.ylabel( 'Stvarne klase'   , fontsize = 12 )
     plt.tight_layout()
     plt.savefig( 'confusion_matrix.png', dpi = 300, bbox_inches = 'tight' )
-    plt.show()
-    plt.close( fig )
 
 # ---------------------------- #
 
