@@ -23,4 +23,6 @@ Model prepoznaje 7 emocija:
 
 Ostvarena tačnost od 65%. Rezultati prikazani na matrici konfuzije testnog skupa.
 
-<img width="2794" height="2368" alt="confusion_matrix" src="https://github.com/user-attachments/assets/4f539387-e214-4a74-9086-0142787caee9" />
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/4f539387-e214-4a74-9086-0142787caee9"   width="450" alt="confusion_matrix">
+</p>
